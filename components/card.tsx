@@ -1,18 +1,42 @@
 //@ts-nocheck
-import React from 'react';
-import {Text, View, StyleSheet, Image} from 'react-native';
+import React, {useState} from 'react';
+import {Text, View, StyleSheet, Image, useWindowDimensions} from 'react-native';
+import Animated, {clamp, useAnimatedReaction, useSharedValue} from 'react-native-reanimated';
+import {Gesture, GestureDetector} from "react-native-gesture-handler";
 
-const Card = ({card}) => {
+const Card = ({ card, index, scrollY, activeCardIndex }) => {
+  const [cardHeight, setCardHeight] = useState(0);
+  const translateY = useSharedValue(0);
+
+  const { height: screenHeight } = useWindowDimensions();
+
+  useAnimatedReaction(
+    () => scrollY.value,
+    (current) => {
+      translateY.value = clamp(-current, -index * cardHeight, 0);
+    }
+  );
+
+  const tap = Gesture.Tap().onEnd(() => {
+    if (activeCardIndex.value === null) {
+      activeCardIndex.value = index;
+    } else {
+      activeCardIndex.value = null;
+    }
+  });
+
   return (
-    <View>
-      <Image
+    <GestureDetector gesture={tap}>
+      <View style={styles.container}>
+      <Animated.Image
           source={card}
-          // onLayout={(event) =>
-          //   setCardHeight(event.nativeEvent.layout.height + 10)
-          // }
-          style={[styles.image]}
-        />
-    </View>
+          onLayout={(event) =>
+            setCardHeight(event.nativeEvent.layout.height + 10)
+          }
+          style={[styles.image, { transform: [{ translateY }] }]}
+      />
+     </View>
+    </GestureDetector>
   );
 };
 
