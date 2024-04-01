@@ -1,7 +1,7 @@
 //@ts-nocheck
 import React, {useState} from 'react';
-import {Text, View, StyleSheet, Image, useWindowDimensions} from 'react-native';
-import Animated, {clamp, useAnimatedReaction, useSharedValue} from 'react-native-reanimated';
+import {Text, View, StyleSheet, Image, useWindowDimensions, Easing} from 'react-native';
+import Animated, {clamp, useAnimatedReaction, useSharedValue, withTiming} from 'react-native-reanimated';
 import {Gesture, GestureDetector} from "react-native-gesture-handler";
 
 const Card = ({ card, index, scrollY, activeCardIndex }) => {
@@ -14,6 +14,36 @@ const Card = ({ card, index, scrollY, activeCardIndex }) => {
     () => scrollY.value,
     (current) => {
       translateY.value = clamp(-current, -index * cardHeight, 0);
+    }
+  );
+
+  useAnimatedReaction(
+    () => activeCardIndex.value,
+    (current, pervious) => {
+      if (current === pervious) {
+        return;
+      }
+      if (activeCardIndex.value === null) {
+        // No card selected, move to list view
+        translateY.value = withTiming(
+          clamp(-scrollY.value, -index * cardHeight, 0)
+        );
+      } else if (activeCardIndex.value === index) {
+        // This card becomes active
+        translateY.value = withTiming(-index * cardHeight, {
+          easing: Easing.out(Easing.quad),
+          duration: 500,
+        });
+      } else {
+        // Another card is active, move to the bottom
+        translateY.value = withTiming(
+          -index * cardHeight * 0.9 + screenHeight * 0.7,
+          {
+            easing: Easing.out(Easing.quad),
+            duration: 500,
+          }
+        );
+      }
     }
   );
 
