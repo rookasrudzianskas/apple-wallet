@@ -1,1 +1,1 @@
-Apple wallet
+Apple wallets
